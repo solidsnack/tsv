@@ -52,14 +52,21 @@ function reassign_tsv_variables {
 }
 
 function write_tsv {
+  local esc
   [[ $# -gt 0 ]] || return 0
-  # TODO: Escaping
-  printf '%s' "$1"
-  shift
-  for arg in "$@"
-  do printf '\t%s' "$arg"
+  while true
+  do
+    esc="$1"
+    esc="${esc//$'\\'/\\}"
+    esc="${esc//$'\t'/\t}"
+    esc="${esc//$'\n'/\n}"
+    esc="${esc//$'\r'/\r}"
+    printf '%s' "$esc"
+    shift
+    [[ $# -gt 0 ]] || break
+    printf $'\t'
   done
-  echo
+  printf $'\n'
 }
 
 function msg { out "$*" >&2 ;}
