@@ -15,13 +15,16 @@ function main {
 function read_brazilian_cities {
   while read_tsv state city population area
   do
-    write_tsv \
-      "state: $state" "city: $city" "population: ${population-?}" "area: $area"
+    if [[ ${population+isset} && ${area+isset} ]]
+    then write_tsv "$city ($state)" "$(bc <<<"scale=4 ; $population/$area")"
+    else write_tsv "$city ($state)" "${population-?}/${area-?}"
+    fi
   done
 }
 
 function read_tsv {
-  IFS=$'\t' read -r "$@" && reassign_tsv_variables "$@"
+  local __tsv_trailing_stuff__  # Shadowing, to protect other vars of this name
+  IFS=$'\t' read -r "$@" __tsv_trailing_stuff__ && reassign_tsv_variables "$@"
 }
 
 # Interprets escape sequences in variable values and re-assigns them. Unsets
@@ -46,7 +49,7 @@ function reassign_tsv_variables {
       head="${rest%%\\*}"
     done
     result+="$rest"
-    eval "$var"'="$result"'
+    eval "$var"'="$result"' # NB: We *reference* and do not *substitute* result
   done
 }
 
