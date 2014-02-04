@@ -4,15 +4,13 @@ function -h {
 cat <<USAGE
  USAGE: tsv.bash
 
+  Calculates population density for major cities of Brazil.
+
 USAGE
 }; function --help { -h ;}                 # A nice way to handle -h and --help
 export LC_ALL=en_US.UTF-8                    # A locale that works consistently
 
 function main {
-  read_brazilian_cities
-}
-
-function read_brazilian_cities {
   while read_tsv state city population area
   do
     if [[ ${population+isset} && ${area+isset} ]]
