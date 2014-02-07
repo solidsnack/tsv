@@ -57,7 +57,7 @@ function write_tsv {
   while true
   do
     esc="$1"
-    esc="${esc//$'\\'/\\}"
+    esc="${esc//'\'/\\\\}"
     esc="${esc//$'\t'/\t}"
     esc="${esc//$'\n'/\n}"
     esc="${esc//$'\r'/\r}"
