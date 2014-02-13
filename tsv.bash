@@ -13,10 +13,12 @@ export LC_ALL=en_US.UTF-8                    # A locale that works consistently
 function main {
   while read_tsv state city population area
   do
+    unset location density
+    local location="$city ($state)"
     if [[ ${population+isset} && ${area+isset} ]]
-    then write_tsv "$city ($state)" "$(bc <<<"scale=4 ; $population/$area")"
-    else write_tsv "$city ($state)" "${population-?}/${area-?}"
+    then local density="$(bc <<<"scale=4 ; $population/$area")"
     fi
+    write_tsv_variables location density
   done
 }
 
@@ -49,6 +51,29 @@ function reassign_tsv_variables {
     result+="$rest"
     eval "$var"'="$result"' # NB: We *reference* and do not *substitute* result
   done
+}
+
+function write_tsv_variables {
+  local __tsv_internal_accum__              # Hope this doesn't shadow anything
+  [[ $# -gt 0 ]] || return 0
+  while true
+  do
+    if [[ ${!1+isset} ]]
+    then
+      __tsv_internal_accum__="${!1}"
+      __tsv_internal_accum__="${__tsv_internal_accum__//'\'/\\\\}"
+      __tsv_internal_accum__="${__tsv_internal_accum__//$'\t'/\t}"
+      __tsv_internal_accum__="${__tsv_internal_accum__//$'\n'/\n}"
+      __tsv_internal_accum__="${__tsv_internal_accum__//$'\r'/\r}"
+    else
+      __tsv_internal_accum__='\N'
+    fi
+    printf '%s' "$__tsv_internal_accum__"
+    shift
+    [[ $# -gt 0 ]] || break
+    printf $'\t'
+  done
+  printf $'\n'
 }
 
 function write_tsv {
