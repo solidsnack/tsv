@@ -46,7 +46,7 @@ function reassign_tsv_variables {
         \\*) result+=$'\\' ; rest="${rest:1}" ;;
         '')  err "Trailing backslash in $var=${!var}"
       esac
-      head="${rest%%\\*}"
+      head="${rest%%\\*}"     # NB: Always skip backslash, so \<char> -> <char>
     done
     result+="$rest"
     eval "$var"'="$result"' # NB: We *reference* and do not *substitute* result
