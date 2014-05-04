@@ -2,6 +2,41 @@ Linear TSV is a line-oriented, portable tabular data format. Tabular data --
 rows of tuples, each of the same length -- is commonly stored as CSV and is
 the lingua franca of spreadsheets, databases and analysis tools.
 
+
+## Format Description
+
+In this format, all records are separated by ASCII newlines (`0x0a`) and
+fields within a record are separated with ASCII tab (`0x09`). It is permitted
+but discouraged to separate records with `\r\n`.
+
+To include newlines, tabs, carriage returns and backslashes in field data, the
+following escape sequences must be used:
+
+* `\n` for newline,
+
+* `\t` for tab,
+
+* `\r` for carriage return,
+
+* `\\` for backslash.
+
+To indicate missing data for a field, the character sequence `\N` (bytes
+`0x5c` and `0x4e`) is used. Note that the `N` is capitalized. This character
+sequence is exactly that used by SQL databases to indicate SQL `NULL` in their
+tab-separated output mode.
+
+
+## A Word About Header Lines
+
+There are no header lines specified by this format. One objection to them is
+that they break the naive concantenation of files. Another is that they are
+anithetical to stream processing. Yet another is that one generally wants more
+than column names -- one wants at least column types. Better to do nothing
+than too little.
+
+
+## Motivation
+
 In advocating a shift to a line-oriented, tab-separated serialization format,
 we are endorsing an existing format: the default serialization format of both
 Postgres and MySQL. We propose to standardize a subset of the format common to
@@ -11,17 +46,17 @@ A truly line-oriented format for tabular data, where newline, carriage return
 and the separator are always represented by escape sequences, offers many
 practical advantages, among them:
 
-* The parsers are simple and efficient.
+* The parsers are simple and fast.
 
 * First pass filtering and sorting for line-oriented formats is easy to
-  implement efficiently in high-level languages, like Python and Java.
+  implement in high-level languages, like Python and Java.
 
 * Analysis and transformation of line-oriented data with command line tools is
   simple, dependable and often surprisingly efficient.
 
 * By requiring escape sequences when newlines and tabs are in field text, the
   format allows parsers to naively and efficiently split data on raw byte
-  values: `0x09` for fields and `0x0A` for records.
+  values: `0x09` for fields and `0x0a` for records.
 
 CSV is almost right and it's worth talking about the disadvantages of CSV that
 motivate the author to promote another tabular data format:
@@ -50,23 +85,11 @@ motivate the author to promote another tabular data format:
 
 ## Bash
 
-    TODO
+Try `tsv.bash < cities10.tsv`.
 
 ## Python
 
-    TODO
-
-## Scala
-
-    TODO
-
-## Haskell
-
-    TODO
-
-## Julia
-
-    TODO
+Try `tsv.py < cities10.tsv`.
 
 # A Grammar
 
@@ -86,8 +109,4 @@ This grammar is presented in the W3C EBNF format.
 
 A nice diagram of the grammar can be generated online with the
 [Bottlecaps Railroad Diagram generator][http://bottlecaps.de/rr/ui].
-
-
-# Ambiguities & Empty Lines
-
 
