@@ -89,7 +89,7 @@ Try `tsv.bash < cities10.tsv`.
 
 ## Python
 
-Try `tsv.py < cities10.tsv`.
+Try `python/example.py < cities10.tsv`.
 
 # A Grammar
 
