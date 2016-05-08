@@ -95,17 +95,19 @@ Try `python/example.py < cities10.tsv`.
 
 This grammar is presented in the W3C EBNF format.
 
-    TSV        ::= Row (NL Row)*
+    TSV        ::= Row (CR? NL Row)*
 
     Row        ::= Field (Tab Field)*
-    Field      ::= ( Escape | NoOpEscape | Char - (NL|Tab|'\') )*
+    Field      ::= (Escape|NoOpEscape|PlainChar)*
 
     Char       ::= [http://www.w3.org/TR/xml#NT-Char]
+    PlainChar  ::= Char - (NL|Tab|CR|'\')
     NL         ::= #x0A
+    CR         ::= #x0D
     Tab        ::= #x09
 
-    Escape     ::= '\n' | '\r' | '\t'
-    NoOpEscape ::= '\' (Char - ('n'|'r'|'t'))
+    Escape     ::= '\n' | '\r' | '\t' | '\\'
+    NoOpEscape ::= '\' (Char - ('n'|'r'|'t'|'\'))
 
 A nice diagram of the grammar can be generated online with the
 [Bottlecaps Railroad Diagram generator][http://bottlecaps.de/rr/ui].
