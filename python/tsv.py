@@ -2,9 +2,10 @@
 from __future__ import unicode_literals
 
 import six
+import warnings
 
 
-def un(source, row=list):
+def un(source, wrapper=list, error_bad_lines=True):
     """Parse a text stream to TSV
 
     If the source is a string, it is converted to a line-iterable stream. If
@@ -29,23 +30,54 @@ def un(source, row=list):
     """
     if isinstance(source, six.string_types):
         source = six.StringIO(source)
-    f = parse_line
-    if row is list:
-        return ( parse_line(line)            for line in source if line != '' )
-    else:
-        if not (hasattr(row, '_fields') and hasattr(row, '_make')):
-            raise ValueError('Custom row holder %r is not a namedtuple', row)
-        return ( parse_namedtuple(line, row) for line in source if line != '' )
 
-def parse_namedtuple(line, namedtuple):
-    try:
-        return namedtuple._make(parse_line(line))
-    except TypeError:
-        return None
+    # Prepare source lines for reading
+    source = ((i, line) for i, line in enumerate(source, 1) if line != '')
+
+    # Get columns
+    if is_namedtuple(wrapper):
+        columns = wrapper._fields
+        wrapper = wrapper._make
+    else:
+        columns = next(source, None)
+        if columns is not None:
+            i, columns = columns
+            columns = wrapper(parse_line(columns))
+            yield columns
+
+    # Get values
+    for i, line in source:
+        values = parse_line(line)
+        if check_line_consistency(columns, values, i, error_bad_lines):
+            yield wrapper(values)
+
+
+def is_namedtuple(obj):
+    return (
+        issubclass(obj, tuple) and
+        hasattr(obj, '_fields') and
+        hasattr(obj, '_make')
+    )
+
 
 def parse_line(line):
     line = line.split('\n')[0].split('\r')[0]
-    return [ parse_field(s) for s in line.split('\t') ]
+    return [parse_field(s) for s in line.split('\t')]
+
+
+def check_line_consistency(columns, values, line_no, error_bad_lines):
+    if columns is None or len(columns) == len(values):
+        return True
+    else:
+        message = (
+            "Expected %d fields in line %d, saw %d"
+        ) % (len(columns), line_no, len(values))
+        if error_bad_lines:
+            raise ValueError(message)
+        else:
+            warnings.warn(message)
+        return False
+
 
 def parse_field(s):
     if s == '\\N':
@@ -95,4 +127,3 @@ def escape_spacing_chars(s):
 
 class FinalBackslashInFieldIsForbidden(ValueError):
     pass
-

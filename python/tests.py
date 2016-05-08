@@ -32,23 +32,30 @@ def test_un_namedtuple_row_holder():
 
 
 def test_un_namedtuple_error():
-    # XXX: https://github.com/solidsnack/tsv/issues/3
     Row = collections.namedtuple('Row', 'x,y')
-    assert list(tsv.un('1\n', Row)) == [None]
-    assert list(tsv.un('1\ta\tb\n', Row)) == [None]
+    with pytest.raises(ValueError):
+        list(tsv.un('1\n', Row))
+    with pytest.raises(ValueError):
+        list(tsv.un('1\ta\tb\n', Row))
 
 
 def test_un_with_inconsistent_number_of_fields():
     source = [
         '1',
-        '1\t2',
+        '2\t3',
     ]
-    assert list(tsv.un(source)) == [['1'], ['1', '2']]
 
+    # Number of fields of all rows should be equal to number of fields in the
+    # first row.
+    with pytest.raises(ValueError) as excinfo:
+        list(tsv.un(source))
+    assert str(excinfo.value) == 'Expected 1 fields in line 2, saw 2'
 
-def test_un_custom_row_holder_error():
-    with pytest.raises(ValueError):
-        tsv.un('1\ta\n', object)
+    # If error_bad_lines is turned off, bad lines are simply skipped.
+    with pytest.warns(UserWarning) as warns:
+        assert list(tsv.un(source, error_bad_lines=False)) == [['1']]
+        assert len(warns) == 1
+        assert str(warns[0].message) == 'Expected 1 fields in line 2, saw 2'
 
 
 def test_final_backslash_error():
