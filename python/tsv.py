@@ -1,4 +1,4 @@
-import StringIO
+import six
 
 
 def un(source, row=list):
@@ -24,8 +24,8 @@ def un(source, row=list):
     type that can be read but not written, plain dictionary parsing is
     omitted.
     """
-    if isinstance(source, basestring):
-        source = StringIO.StringIO(source)
+    if isinstance(source, six.string_types):
+        source = six.StringIO(source)
     f = parse_line
     if row is list:
         return ( parse_line(line)            for line in source if line != '' )
@@ -81,7 +81,7 @@ def format_fields(*fields):
 def format_field(thing):
     if thing is None:
         return '\\N'
-    text = thing if isinstance(thing, basestring) else str(thing)
+    text = thing if isinstance(thing, six.string_types) else str(thing)
     return ('\\\\').join( escape_spacing_chars(s) for s in text.split('\\') )
 
 def escape_spacing_chars(s):

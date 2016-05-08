@@ -10,6 +10,7 @@ setup(name                   =  'linear-tsv',
       author_email           =  'jason.dusek@gmail.com',
       url                    =  'https://github.com/solidsnack/tsv',
       py_modules             =  [ 'tsv' ],
+      install_requires       =  [ 'six' ],
       classifiers            =  [ 'Intended Audience :: Developers',
                                   'Programming Language :: Python',
                                   'Development Status :: 4 - Beta' ])
