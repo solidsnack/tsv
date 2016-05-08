@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import re
 import six
 import warnings
 
@@ -32,22 +33,20 @@ def un(source, wrapper=list, error_bad_lines=True):
         source = six.StringIO(source)
 
     # Prepare source lines for reading
-    source = ((i, line) for i, line in enumerate(source, 1) if line != '')
+    rows = parse_lines(source, error_bad_lines)
 
     # Get columns
     if is_namedtuple(wrapper):
         columns = wrapper._fields
         wrapper = wrapper._make
     else:
-        columns = next(source, None)
+        columns = next(rows, None)
         if columns is not None:
             i, columns = columns
-            columns = wrapper(parse_line(columns))
-            yield columns
+            yield wrapper(columns)
 
     # Get values
-    for i, line in source:
-        values = parse_line(line)
+    for i, values in rows:
         if check_line_consistency(columns, values, i, error_bad_lines):
             yield wrapper(values)
 
@@ -60,9 +59,24 @@ def is_namedtuple(obj):
     )
 
 
-def parse_line(line):
+def parse_lines(lines, error_bad_lines):
+    for i, line in enumerate(lines, 1):
+        if line != '':
+            values = parse_line(line, i, error_bad_lines)
+            if values is not None:
+                yield i, values
+
+
+def parse_line(line, line_no, error_bad_lines):
     line = line.split('\n')[0].split('\r')[0]
-    return [parse_field(s) for s in line.split('\t')]
+    try:
+        return [parse_field(s) for s in line.split('\t')]
+    except EscapeDecodeError as e:
+        message = "%s in line %d" % (e, line_no)
+        if error_bad_lines:
+            raise ValueError(message)
+        else:
+            warnings.warn(message)
 
 
 def check_line_consistency(columns, values, line_no, error_bad_lines):
@@ -79,14 +93,27 @@ def check_line_consistency(columns, values, line_no, error_bad_lines):
         return False
 
 
+ESCAPE_DECODE_RE = re.compile(r'\\(.)|\\()$', flags=(re.MULTILINE | re.DOTALL))
+ESCAPE_CHARS = {
+    't': '\t',
+    'n': '\n',
+    'r': '\r',
+    '\\': '\\',
+}
+
+
+def _escape_decode(match):
+    char = match.group(1)
+    if char in ESCAPE_CHARS:
+        return ESCAPE_CHARS[char]
+    else:
+        raise EscapeDecodeError("Unknown escape character: %r" % char)
+
+
 def parse_field(s):
     if s == '\\N':
         return None
-    if s[-1:] == '\\':
-        raise FinalBackslashInFieldIsForbidden
-    for a, b in [ ('\\t', '\t'), ('\\n', '\n'), ('\\r', '\r'), ('\\', '') ]:
-        s = s.replace(a, b)
-    return s
+    return ESCAPE_DECODE_RE.sub(_escape_decode, s)
 
 
 def to(items, output=None):
@@ -99,31 +126,35 @@ def to(items, output=None):
     parameter is passed, it should be a file-like object. Output is always
     newline separated.
     """
-    strings = ( format_collection(item) for item in items )
+    strings = (format_collection(item) for item in items)
     if output is None:
         return strings
     else:
         for s in strings:
             output.write(s + '\n')
 
+
 def format_collection(col):
-    return format_fields(*list(col))
+    return format_fields(col)
 
-def format_fields(*fields):
-    if len(fields) != 0:
-        return '\t'.join( format_field(field) for field in fields )
 
-def format_field(thing):
-    if thing is None:
+def format_fields(fields):
+    return '\t'.join(format_field(field) for field in fields)
+
+
+def format_field(value):
+    if value is None:
         return '\\N'
-    text = thing if isinstance(thing, six.string_types) else str(thing)
-    return ('\\\\').join( escape_spacing_chars(s) for s in text.split('\\') )
+    if not isinstance(value, six.string_types):
+        value = six.text_type(value)
+    return escape_special_chars(value)
 
-def escape_spacing_chars(s):
-    for a, b in [ ('\t', '\\t'), ('\n', '\\n'), ('\r', '\\r') ]:
+
+def escape_special_chars(s):
+    for a, b in [('\\', '\\\\'), ('\t', '\\t'), ('\n', '\\n'), ('\r', '\\r')]:
         s = s.replace(a, b)
     return s
 
 
-class FinalBackslashInFieldIsForbidden(ValueError):
+class EscapeDecodeError(ValueError):
     pass

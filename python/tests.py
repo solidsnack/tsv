@@ -13,8 +13,7 @@ def test_un():
         r'1	a',
         r'2	\t',
         r'3	\n',
-        # XXX: https://github.com/solidsnack/tsv/issues/4
-        # '4	\\',
+        r'4	\\\\',
         r'5	\N',
         r'',
     ])
@@ -22,6 +21,7 @@ def test_un():
         ['1', 'a'],
         ['2', '\t'],
         ['3', '\n'],
+        ['4', '\\\\'],
         ['5', None],
     ]
 
@@ -59,9 +59,16 @@ def test_un_with_inconsistent_number_of_fields():
 
 
 def test_final_backslash_error():
-    # XXX: https://github.com/solidsnack/tsv/issues/4
-    with pytest.raises(tsv.FinalBackslashInFieldIsForbidden):
-        list(tsv.un('1\t\\\n'))
+    with pytest.raises(ValueError) as excinfo:
+        assert list(tsv.un('1\t\\\n')) == []
+    assert str(excinfo.value) == 'Unknown escape character: None in line 1'
+
+    with pytest.raises(ValueError) as excinfo:
+        assert list(tsv.un('1\t\\z\n')) == []
+    if six.PY2:
+        assert str(excinfo.value) == "Unknown escape character: u'z' in line 1"
+    else:
+        assert str(excinfo.value) == "Unknown escape character: 'z' in line 1"
 
 
 def test_to():
@@ -69,8 +76,9 @@ def test_to():
         (1, 'a'),
         (2, '\t'),
         (3, '\n'),
-        (3, '\\'),
-        (4, None),
+        (4, '\\'),
+        (5, '\\\\'),
+        (6, None),
     ]
     output = six.StringIO()
     tsv.to(table, output)
@@ -78,8 +86,9 @@ def test_to():
         r'1	a',
         r'2	\t',
         r'3	\n',
-        r'3	\\',
-        r'4	\N',
+        r'4	\\',
+        r'5	\\\\',
+        r'6	\N',
         r'',
     ])
 
