@@ -50,13 +50,25 @@ def parse_line(line):
 
 
 def parse_field(s):
+    o = ''
     if s == '\\N':
         return None
-    if s[-1:] == '\\':
-        raise FinalBackslashInFieldIsForbidden
-    for a, b in [('\\t', '\t'), ('\\n', '\n'), ('\\r', '\r'), ('\\', '')]:
-        s = s.replace(a, b)
-    return s
+    before, sep, after = s.partition('\\')
+    while sep != '':
+        o += before
+        if after == '':
+            raise FinalBackslashInFieldIsForbidden
+        if after[0] in escapes:
+            o += escapes[after[0]]
+            before, sep, after = after[1:].partition('\\')
+        else:
+            before, sep, after = after.partition('\\')
+    else:
+        o += before
+        return o
+
+
+escapes = {'t': '\t', 'n': '\n', 'r': '\r', '\\': '\\'}
 
 
 def to(items, output=None):

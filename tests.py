@@ -13,16 +13,18 @@ def test_un():
         r'1	a',
         r'2	\t',
         r'3	\n',
-        # XXX: https://github.com/solidsnack/tsv/issues/4
-        # '4	\\',
+        r'4	\\',
         r'5	\N',
+        r'6	\j',
         r'',
     ])
     assert list(tsv.un(source)) == [
         ['1', 'a'],
         ['2', '\t'],
         ['3', '\n'],
+        ['4', '\\'],
         ['5', None],
+        ['6', 'j'],
     ]
 
 
@@ -52,7 +54,6 @@ def test_un_custom_row_holder_error():
 
 
 def test_final_backslash_error():
-    # XXX: https://github.com/solidsnack/tsv/issues/4
     with pytest.raises(tsv.FinalBackslashInFieldIsForbidden):
         list(tsv.un('1\t\\\n'))
 
