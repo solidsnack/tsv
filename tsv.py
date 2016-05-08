@@ -69,14 +69,7 @@ def parse_lines(lines, error_bad_lines):
 
 def parse_line(line, line_no, error_bad_lines):
     line = line.split('\n')[0].split('\r')[0]
-    try:
-        return [parse_field(s) for s in line.split('\t')]
-    except EscapeDecodeError as e:
-        message = "%s in line %d" % (e, line_no)
-        if error_bad_lines:
-            raise ValueError(message)
-        else:
-            warnings.warn(message)
+    return [parse_field(s) for s in line.split('\t')]
 
 
 def check_line_consistency(columns, values, line_no, error_bad_lines):
@@ -104,10 +97,7 @@ ESCAPE_CHARS = {
 
 def _escape_decode(match):
     char = match.group(1)
-    if char in ESCAPE_CHARS:
-        return ESCAPE_CHARS[char]
-    else:
-        raise EscapeDecodeError("Unknown escape character: %r" % char)
+    return ESCAPE_CHARS.get(char, char or '')
 
 
 def parse_field(s):
@@ -154,7 +144,3 @@ def escape_special_chars(s):
     for a, b in [('\\', '\\\\'), ('\t', '\\t'), ('\n', '\\n'), ('\r', '\\r')]:
         s = s.replace(a, b)
     return s
-
-
-class EscapeDecodeError(ValueError):
-    pass

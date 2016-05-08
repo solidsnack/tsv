@@ -15,6 +15,7 @@ def test_un():
         r'3	\n',
         r'4	\\\\',
         r'5	\N',
+        r'5	\j',
         r'',
     ])
     assert list(tsv.un(source)) == [
@@ -23,6 +24,7 @@ def test_un():
         ['3', '\n'],
         ['4', '\\\\'],
         ['5', None],
+        ['5', 'j'],
     ]
 
 
@@ -59,16 +61,8 @@ def test_un_with_inconsistent_number_of_fields():
 
 
 def test_final_backslash_error():
-    with pytest.raises(ValueError) as excinfo:
-        assert list(tsv.un('1\t\\\n')) == []
-    assert str(excinfo.value) == 'Unknown escape character: None in line 1'
-
-    with pytest.raises(ValueError) as excinfo:
-        assert list(tsv.un('1\t\\z\n')) == []
-    if six.PY2:
-        assert str(excinfo.value) == "Unknown escape character: u'z' in line 1"
-    else:
-        assert str(excinfo.value) == "Unknown escape character: 'z' in line 1"
+    assert list(tsv.un('1\t\\\n')) == [['1', '']]
+    assert list(tsv.un('1\t\\z\n')) == [['1', 'z']]
 
 
 def test_to():
