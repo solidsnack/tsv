@@ -29,13 +29,13 @@ def un(source, row=list):
     """
     if isinstance(source, six.string_types):
         source = six.StringIO(source)
-    f = parse_line
     if row is list:
-        return ( parse_line(line)            for line in source if line != '' )
+        return (parse_line(line) for line in source if line != '')
     else:
         if not (hasattr(row, '_fields') and hasattr(row, '_make')):
             raise ValueError('Custom row holder %r is not a namedtuple', row)
-        return ( parse_namedtuple(line, row) for line in source if line != '' )
+        return (parse_namedtuple(line, row) for line in source if line != '')
+
 
 def parse_namedtuple(line, namedtuple):
     try:
@@ -43,16 +43,18 @@ def parse_namedtuple(line, namedtuple):
     except TypeError:
         return None
 
+
 def parse_line(line):
     line = line.split('\n')[0].split('\r')[0]
-    return [ parse_field(s) for s in line.split('\t') ]
+    return [parse_field(s) for s in line.split('\t')]
+
 
 def parse_field(s):
     if s == '\\N':
         return None
     if s[-1:] == '\\':
         raise FinalBackslashInFieldIsForbidden
-    for a, b in [ ('\\t', '\t'), ('\\n', '\n'), ('\\r', '\r'), ('\\', '') ]:
+    for a, b in [('\\t', '\t'), ('\\n', '\n'), ('\\r', '\r'), ('\\', '')]:
         s = s.replace(a, b)
     return s
 
@@ -67,32 +69,35 @@ def to(items, output=None):
     parameter is passed, it should be a file-like object. Output is always
     newline separated.
     """
-    strings = ( format_collection(item) for item in items )
+    strings = (format_collection(item) for item in items)
     if output is None:
         return strings
     else:
         for s in strings:
             output.write(s + '\n')
 
+
 def format_collection(col):
     return format_fields(*list(col))
 
+
 def format_fields(*fields):
     if len(fields) != 0:
-        return '\t'.join( format_field(field) for field in fields )
+        return '\t'.join(format_field(field) for field in fields)
+
 
 def format_field(thing):
     if thing is None:
         return '\\N'
     text = thing if isinstance(thing, six.string_types) else str(thing)
-    return ('\\\\').join( escape_spacing_chars(s) for s in text.split('\\') )
+    return ('\\\\').join(escape_spacing_chars(s) for s in text.split('\\'))
+
 
 def escape_spacing_chars(s):
-    for a, b in [ ('\t', '\\t'), ('\n', '\\n'), ('\r', '\\r') ]:
+    for a, b in [('\t', '\\t'), ('\n', '\\n'), ('\r', '\\r')]:
         s = s.replace(a, b)
     return s
 
 
 class FinalBackslashInFieldIsForbidden(ValueError):
     pass
-
