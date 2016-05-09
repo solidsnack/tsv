@@ -14,9 +14,8 @@ def test_un():
         r'2	\t',
         r'3	\n',
         r'4	\\',
-        r'4	\\\\',
         r'5	\N',
-        r'5	\j',
+        r'6	\j',
         r'',
     ])
     assert list(tsv.un(source)) == [
@@ -24,9 +23,8 @@ def test_un():
         ['2', '\t'],
         ['3', '\n'],
         ['4', '\\'],
-        ['4', '\\\\'],
         ['5', None],
-        ['5', 'j'],
+        ['6', 'j'],
     ]
 
 
@@ -63,8 +61,8 @@ def test_un_with_inconsistent_number_of_fields():
 
 
 def test_final_backslash_error():
-    assert list(tsv.un('1\t\\\n')) == [['1', '']]
-    assert list(tsv.un('1\t\\z\n')) == [['1', 'z']]
+    with pytest.raises(tsv.FinalBackslashInFieldIsForbidden):
+        list(tsv.un('1\t\\\n'))
 
 
 def test_to():

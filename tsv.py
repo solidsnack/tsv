@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import re
 import six
 import warnings
 
@@ -86,24 +85,26 @@ def check_line_consistency(columns, values, line_no, error_bad_lines):
         return False
 
 
-ESCAPE_DECODE_RE = re.compile(r'\\(.)|\\()$', flags=(re.MULTILINE | re.DOTALL))
-ESCAPE_CHARS = {
-    't': '\t',
-    'n': '\n',
-    'r': '\r',
-    '\\': '\\',
-}
-
-
-def _escape_decode(match):
-    char = match.group(1)
-    return ESCAPE_CHARS.get(char, char or '')
-
-
 def parse_field(s):
+    o = ''
     if s == '\\N':
         return None
-    return ESCAPE_DECODE_RE.sub(_escape_decode, s)
+    before, sep, after = s.partition('\\')
+    while sep != '':
+        o += before
+        if after == '':
+            raise FinalBackslashInFieldIsForbidden
+        if after[0] in escapes:
+            o += escapes[after[0]]
+            before, sep, after = after[1:].partition('\\')
+        else:
+            before, sep, after = after.partition('\\')
+    else:
+        o += before
+        return o
+
+
+escapes = {'t': '\t', 'n': '\n', 'r': '\r', '\\': '\\'}
 
 
 def to(items, output=None):
@@ -144,3 +145,7 @@ def escape_special_chars(s):
     for a, b in [('\\', '\\\\'), ('\t', '\\t'), ('\n', '\\n'), ('\r', '\\r')]:
         s = s.replace(a, b)
     return s
+
+
+class FinalBackslashInFieldIsForbidden(ValueError):
+    pass
