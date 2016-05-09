@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(name='linear-tsv',
       license='Apache',
-      version='0.99.0',
+      version='0.99.1',
       description='Line-oriented, tab-separated value format',
       author='Jason Dusek',
       author_email='jason.dusek@gmail.com',
