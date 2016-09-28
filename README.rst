@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/solidsnack/tsv.svg?branch=master
+    :target: https://travis-ci.org/solidsnack/tsv
+
 `Linear TSV`__ is a line-oriented, portable tabular data format. Tabular data
 -- rows of tuples, each of the same length -- is commonly stored as CSV and is
 the lingua franca of spreadsheets, databases and analysis tools.
