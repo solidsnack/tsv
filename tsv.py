@@ -32,7 +32,7 @@ def un(source, wrapper=list, error_bad_lines=True):
         source = six.StringIO(source)
 
     # Prepare source lines for reading
-    rows = parse_lines(source, error_bad_lines)
+    rows = parse_lines(source)
 
     # Get columns
     if is_namedtuple(wrapper):
@@ -58,15 +58,15 @@ def is_namedtuple(obj):
     )
 
 
-def parse_lines(lines, error_bad_lines):
+def parse_lines(lines):
     for i, line in enumerate(lines, 1):
         if line != '':
-            values = parse_line(line, i, error_bad_lines)
+            values = parse_line(line)
             if values is not None:
                 yield i, values
 
 
-def parse_line(line, line_no, error_bad_lines):
+def parse_line(line):
     line = line.split('\n')[0].split('\r')[0]
     return [parse_field(s) for s in line.split('\t')]
 
