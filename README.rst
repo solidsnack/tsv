@@ -32,7 +32,7 @@ Python API
 
 
     # Parse each row as a particular class derived with namedtuple()
-    class Stats(namedtuple('Stats', ['state', 'city', 'population', 'area'])): 
+    class Stats(namedtuple('Stats', ['state', 'city', 'population', 'area'])):
         pass
 
     tuples = tsv.un(sys.stdin, Stats)
@@ -45,6 +45,34 @@ Python API
 
     # Write the rows to a handle:
     strings = tsv.to(tuples, sys.stdout)
+
+
+    # CSV compatible API (reader/writer)
+    with open('eggs.tsv', 'w') as tsvfile:
+        spamwriter = tsv.writer(tsvfile)
+        spamwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
+        spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
+
+    with open('eggs.tsv') as tsvfile:
+        spamreader = tsv.reader(tsvfile)
+        for row in spamreader:
+            print(', '.join(row))
+
+
+    # CSV compatible API (DictReader/DictWriter)
+    with open('names.tsv', 'w') as tsvfile:
+        fieldnames = ['first_name', 'last_name']
+        writer = tsv.DictWriter(tsvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerow({'first_name': 'Baked', 'last_name': 'Beans'})
+        writer.writerow({'first_name': 'Lovely', 'last_name': 'Spam'})
+        writer.writerow({'first_name': 'Wonderful', 'last_name': 'Spam'})
+
+    with open('names.tsv') as tsvfile:
+        reader = tsv.DictReader(tsvfile)
+        for row in reader:
+            print(row['first_name'], row['last_name'])
 
 ------------------
 Format Description

@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import csv
 import six
 import warnings
 
@@ -149,3 +150,46 @@ def escape_special_chars(s):
 
 class FinalBackslashInFieldIsForbidden(ValueError):
     pass
+
+
+class reader(object):
+    dialect = 'linear-tsv'
+
+    def __init__(self, tsvfile):
+        self.tsvfile = tsvfile
+        self.line_num = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        line = next(self.tsvfile)
+        self.line_num += 1
+        return parse_line(line)
+
+
+class writer(object):
+    dialect = 'linear-tsv'
+
+    def __init__(self, tsvfile):
+        self.tsvfile = tsvfile
+
+    def writerow(self, row):
+        to([row], self.tsvfile)
+
+    def writerows(self, rows):
+        to(rows, self.tsvfile)
+
+
+class DictReader(csv.DictReader):
+    def __init__(self, f, fieldnames=None, restkey=None, restval=None):
+        csv.DictReader.__init__(self, f, fieldnames=fieldnames,
+                                restkey=restkey, restval=restval)
+        self.reader = reader(f)
+
+
+class DictWriter(csv.DictWriter):
+    def __init__(self, f, fieldnames, restval='', extrasaction='raise'):
+        csv.DictWriter.__init__(self, f, fieldnames=fieldnames,
+                                restval=restval, extrasaction=extrasaction)
+        self.writer = writer(f)
