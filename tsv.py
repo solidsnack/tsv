@@ -2,8 +2,9 @@
 from __future__ import unicode_literals
 
 import csv
-import six
 import warnings
+
+import six
 
 
 def un(source, wrapper=list, error_bad_lines=True):
